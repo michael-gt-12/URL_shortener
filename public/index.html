@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>URL Shortener</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 20px;
+      }
+      input,
+      button {
+        padding: 10px;
+        font-size: 16px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 12px;
+      }
+      button {
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 16px;
+      }
+      .muted {
+        color: #666;
+        font-size: 14px;
+      }
+      a {
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔗 URL Shortener</h1>
+    <div class="card">
+      <form id="form">
+        <label for="url">Long URL</label>
+        <input
+          id="url"
+          type="url"
+          placeholder="https://example.com/some/very/long/path?with=query"
+          required
+        />
+        <button type="submit">Shorten</button>
+      </form>
+      <div id="msg" class="result"></div>
+      <p class="muted">Data is stored in your local MySQL database.</p>
+    </div>
+
+    <script>
+      const form = document.getElementById("form");
+      const urlInput = document.getElementById("url");
+      const msg = document.getElementById("msg");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg.textContent = "Shortening...";
+        try {
+          const res = await fetch("/api/shorten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: urlInput.value.trim() }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed");
+          msg.innerHTML = `
+          <div>✅ Short URL:</div>
+          <div><a href="${data.shortUrl}" target="_blank" rel="noopener">${data.shortUrl}</a></div>
+          <div class="muted">Original: <a href="${data.longUrl}" target="_blank" rel="noopener">${data.longUrl}</a></div>
+        `;
+          urlInput.value = "";
+        } catch (err) {
+          msg.innerHTML = `<div style="color:#b00020">❌ ${err.message}</div>`;
+        }
+      });
+    </script>
+  </body>
+</html>
